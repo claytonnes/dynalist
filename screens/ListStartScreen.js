@@ -1,61 +1,15 @@
 import React from 'react';
-import { useState } from 'react';
-import { useEffect } from 'react';
-import { Text, View, StyleSheet, Pressable, Dimensions } from 'react-native';
-import { FlatList, ScrollView, TouchableOpacity } from 'react-native-gesture-handler';
-import { set } from 'react-native-reanimated';
+import { useState, useEffect } from 'react';
+import { Text, View, StyleSheet, Pressable, Dimensions, ActivityIndicator } from 'react-native';
+import { FlatList } from 'react-native-gesture-handler';
 import NewElementButton from '../components/NewElementButton';
-import Db from '../db';
+import Storage from '../storage';
+import DeleteButton from '../components/DeleteButton';
 
 const {height, width} = Dimensions.get('window');
-const db = new Db();
+const storage = new Storage();
 
-const DATA = [
-    {
-        id: 1,
-        name: "lista",
-        store: "Ica hörnan",
-        date: '21/7-2020'
-    },
-    {
-        id: 2,
-        name: "lista",
-        store: "Ica hörnan",
-        date: '21/7-2020'
-    },
-    {
-        id: 3,
-        name: "lista",
-        store: "Ica hörnan",
-        date: '21/7-2020'
-    },
-    {
-        id: 4,
-        name: "lista",
-        store: "Ica hörnan",
-        date: '21/7-2020'
-    },
-    {
-        id: 5,
-        name: "lista",
-        store: "Ica hörnan",
-        date: '21/7-2020'
-    },
-    {
-        id: 6,
-        name: "lista",
-        store: "Ica hörnan",
-        date: '21/7-2020'
-    },
-    {
-        id: 7,
-        name: "lista",
-        store: "Ica hörnan",
-        date: '21/7-2020'
-    },   
-]
-
-const ListElement = ({ listName, store, date, onPress }) =>
+const ListElement = ({ listName, store, date, onPress, deleteFunction }) =>
 {
     return(
         <Pressable 
@@ -67,49 +21,60 @@ const ListElement = ({ listName, store, date, onPress }) =>
                 <Text style={styles.listStoreText}>{store}</Text>
             </View>
             <Text style={styles.listDateText}>{date}</Text>
+            <DeleteButton deleteFunction={deleteFunction} size={30} color={"gray"}/>
         </Pressable>
 
     );
 };
 
-const renderListElements = async (items, navigation) => {
-    return items.map((item) => {
-        return(
-            <ListElement
-            key={item.id} 
-            listName={item.name}
-            store={item.store}
-            date={item.date}
-            onPress={ () => {
-                navigation.navigate('ListScreen', {listId: item.id});
-            }}
-            />)
-    })
-}
+
 
 export default function ListStartScreen( {navigation} ) {
+    //Hooks for managing state on lists
     const [lists, setLists] = useState([]);
-    const [fetched, setFetched] = useState(false);
+
+    async function fetchLists(){
+        setLists(await storage.getAllLists());
+    }
 
     useEffect(() => {
-        async function fetchLists(){
-            setLists(await db.getAllLists())               
-        }
-        async function confirmFetched(){    
-            console.log("hello");
-            setFetched(true);
-        }
-        fetchLists();
-        
-    }, [])
+        //Used for refreshing upon going back from ListScreen
+        const unsubscribe = navigation.addListener('focus', () => {
+          fetchLists();
+        });
+        // Return the function to unsubscribe from the event so it gets removed on unmount
+        return unsubscribe;
+      }, [navigation]);
 
-    let flatList = fetched ?             
-    <FlatList 
-    style={flatList}
-    renderItem={renderListElements}
-    data={lists}
-    keyExtractor={item => item.id}
-    /> : <></>;
+    //Getting the lists from async storage on load
+    useEffect(() => {
+        fetchLists();     
+    })
+
+    //Function for rendering a list element for the flatlist
+    const renderListElement = ({ item }) =>
+    <ListElement
+    key={item.id} 
+    listName={item.name}
+    store={item.store}
+    date={item.date}
+    onPress={ () => {
+        navigation.navigate('ListScreen', {listId: item.id});
+    }}
+    deleteFunction={ async () => {
+        //finding correct list to delete
+        const listToDelete = lists.find((element) => element.id == item.id);
+        let copyOfLists = lists;
+        const index = copyOfLists.indexOf(listToDelete);
+
+        //Removing list from copy of state list
+        copyOfLists.splice(index, 1);
+
+        //adding to storage and updating state
+        await storage.deleteList(listToDelete.id);
+        setLists(copyOfLists);
+    }}
+    />
 
     return (
         <View style={styles.container}>
@@ -120,10 +85,17 @@ export default function ListStartScreen( {navigation} ) {
             text="Skapa ny lista"
             />
             <Text style={styles.yourListsText}>Dina listor:</Text>
-            {flatList}
+            <FlatList 
+            style={styles.flatList}
+            renderItem={renderListElement}
+            data={lists}
+            keyExtractor={(item) => item.id}
+            />
         </View>          
-    );
-}
+        );
+    }    
+
+
 
 const styles = StyleSheet.create({
   container: {
@@ -135,10 +107,11 @@ const styles = StyleSheet.create({
       flexDirection: "row",
       margin: width * 0.01,
       backgroundColor: "#EDEDF4",
-      borderWidth: 0.2
+      borderWidth: 0.2,
+      alignItems: "center"
   },
   flatList: {
-      flex: 1,
+      height: height * 0.75
   },
   leftElement: {     
       flex: 1,
