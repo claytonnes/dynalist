@@ -1,58 +1,110 @@
-// import React from 'react';
-// import { useState } from 'react';
-// import { Text, View, StyleSheet, Pressable, Dimensions } from 'react-native';
-// import { ScrollView } from 'react-native-gesture-handler';
-// import NewElementButton from '../components/NewElementButton';
-// import Db from '../db';
+import React from 'react';
+import { useEffect } from 'react';
+import { useState } from 'react';
+import { Text, View, StyleSheet, Pressable, Dimensions } from 'react-native';
+import { FlatList, ScrollView } from 'react-native-gesture-handler';
+import NewElementButton from '../components/NewElementButton';
+import Storage from '../storage';
+import DeleteButton from '../components/DeleteButton';
 
-// const {height, width} = Dimensions.get('window');
-// const db = new Db();
+const {height, width} = Dimensions.get('window');
+const storage = new Storage();
 
-// const ListElement = ({ id, storeName}) =>
-// {
-//     return(
-//         <Pressable 
-//         style={styles.elementContainer}
-//         onPress={() => onPress()}
-//         >
-//             <View style={styles.leftElement}>
-//                 <Text style={styles.listNameText}>{storeName}</Text>
-//             </View>
-//         </Pressable>
+const ListElement = ({ id, storeName, onPress, deleteFunction }) =>
+{
+    return(
+        <Pressable 
+        style={styles.elementContainer}
+        onPress={() => onPress()}
+        >
+            <View style={styles.leftElement}>
+                <Text style={styles.listNameText}>{storeName}</Text>
+            </View>
+            <DeleteButton size={25} color={"gray"} style={styles.deleteButton}
+            deleteFunction={deleteFunction}/>
+        </Pressable>
 
-//     );
-// };
-
-// const renderListElements = (stores) => {
-//     return stores.map(store => {
-//         return (<ListElement id={store.id} storeName={store.name}/>)
-//     })
-// }
-
-// export default function StoreStartScreen( { navigation } )  {
-//     const [stores, setStores] = useState(db.getStores());
-//     return (
-//         <ScrollView style={styles.container}>
-//             <NewElementButton 
-//             onPress={() => {navigation.navigate('StoreScreen');}}
-//             text='Ny butikslayout'
-//             />
-//             {renderListElements(stores)}
-//         </ScrollView>
-//     )
-// }
+    );
+};
 
 
-// const styles = StyleSheet.create({
-//     container:{
-//         flex: 1,
-//         backgroundColor: "#EBF5FF"
-//     },
-//     elementContainer: {
-//         flex: 1,
-//         flexDirection: "row",
-//         margin: width * 0.01,
-//         backgroundColor: "#EDEDF4",
-//         borderWidth: 0.2
-//     },
-// })
+
+
+export default function StoreStartScreen( { navigation } )  {
+    const [stores, setStores] = useState([]);
+
+    async function fetchStores(){
+        setStores(await storage.getStores());
+    };
+
+    useEffect(() => {
+        //Used for refreshing upon going back from ListScreen
+        const unsubscribe = navigation.addListener('focus', () => {
+          fetchStores();
+        });
+        // Return the function to unsubscribe from the event so it gets removed on unmount
+        return unsubscribe;
+      }, [navigation]);
+
+    const renderStore = ({ item }) => (
+        <ListElement id={item.id} storeName={item.name} key={item.id}
+        onPress={() => {
+            navigation.navigate('StoreScreen', {storeId: item.id});
+        }}
+        deleteFunction={ async () => {
+            let copy = stores;
+            const store = copy.find((store) => store.id == item.id);
+            copy.splice(copy.indexOf(store),1);
+
+            await storage.deleteStore(item.id);
+            fetchStores();
+        }}
+        />
+    );
+
+
+    return (
+        <View style={styles.container}>
+            <NewElementButton 
+            onPress={() => {navigation.navigate('StoreScreen');}}
+            text='Ny butikslayout'
+            />
+            <FlatList
+            data={stores}
+            renderItem={renderStore}
+            keyExtractor={(item) => item.id}
+            style={styles.flatList}
+            />
+        </View>
+    )
+}
+
+
+const styles = StyleSheet.create({
+    container:{
+        flex: 1,
+        backgroundColor: "#EBF5FF"
+    },
+    deleteButton: {
+        flex: 1,
+    },
+    flatList: {
+        height: height * 0.75,
+    },
+    elementContainer: {
+        height: height * 0.05,
+        flexDirection: "row",
+        margin: width * 0.01,
+        backgroundColor: "#EDEDF4",
+        borderWidth: 0.2,
+        alignItems: "center"
+    },
+    leftElement: {
+        flex: 13
+    },
+    listNameText:{
+        fontSize: 24,
+        fontWeight: "bold",
+        paddingLeft: width * 0.01
+    }
+})

@@ -46,10 +46,6 @@ export default function ListStartScreen( {navigation} ) {
         return unsubscribe;
       }, [navigation]);
 
-    //Getting the lists from async storage on load
-    useEffect(() => {
-        fetchLists();     
-    })
 
     //Function for rendering a list element for the flatlist
     const renderListElement = ({ item }) =>
@@ -72,7 +68,7 @@ export default function ListStartScreen( {navigation} ) {
 
         //adding to storage and updating state
         await storage.deleteList(listToDelete.id);
-        setLists(copyOfLists);
+        fetchLists();
     }}
     />
 

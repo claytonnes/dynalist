@@ -1,18 +1,15 @@
 import React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
-import ListStack from '../routes/ListStack';
-import StoreStack from '../routes/StoreStack';
+import ListStartScreen from '../screens/ListStartScreen';
+import StoreStartScreen from '../screens/StoreStartScreen';
 
 const Tab = createMaterialTopTabNavigator();
 
 export default function HomeTabs(props){
     return(
-        <NavigationContainer>   
-            <Tab.Navigator>
-                <Tab.Screen name="Listor" component={ListStack}/>
-                {/* <Tab.Screen name="Butiker" component={StoreStack} /> */}
-            </Tab.Navigator>
-        </NavigationContainer>
+        <Tab.Navigator>
+            <Tab.Screen name="Listor" component={ListStartScreen}/>
+            <Tab.Screen name="Butiker" component={StoreStartScreen} />
+        </Tab.Navigator>
     );
 }

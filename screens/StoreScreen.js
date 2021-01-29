@@ -1,11 +1,13 @@
 import React from 'react';
-import { useState, state } from 'react';
+import { useEffect } from 'react';
+import { useState} from 'react';
 import { Pressable, View, StyleSheet, Dimensions, Text, TextInput, Button } from 'react-native';
 import DraggableFlatList from "react-native-draggable-flatlist";
 import productCategories from '../productCategories';
-import Db from '../db';
+import Storage from '../storage';
+import { v4 as uuidv4 } from 'uuid';
 
-const db = new Db();
+const storage = new Storage();
 
 const {height, width} = Dimensions.get('window');
 
@@ -17,9 +19,29 @@ const renderCategoryCard = ( {item, index, drag} ) => {
     )
 }
 
-export default function StoreScreen(props) {
-    const [categories, setCategories] = useState(productCategories);
+export default function StoreScreen({ navigation, route }) {
+    const [categories, setCategories] = useState([]);
     const [storeName, setStoreName] = useState('');
+
+    //Checking if parameters were sent
+    let storeId;
+    if(route.params != null){
+        storeId = route.params.storeId;
+    }
+
+    useEffect(() => {
+        async function fetchStore(){
+            if(storeId != null){
+                let store = await storage.getStore(storeId)
+                setCategories(await store.order);
+                setStoreName(await store.name);
+            }
+            else{
+                setCategories(productCategories);
+            }
+        }
+        fetchStore();
+    }, [])
     return (
         <View style={styles.container}>
 
@@ -28,19 +50,21 @@ export default function StoreScreen(props) {
             color="#90E39A"
             style={styles.button}
             marginTop={height * 0.01}
-            onPress={() => {
-                db.setStore('1', storeName, categories);
-                props.navigation.navigate('StoreStart');
+            onPress={async () => {
+                await storage.setStore(uuidv4(), storeName, categories);
+                navigation.goBack();
             }}
             />
 
             <TextInput
             style={styles.textInput}
             placeholder={"Butiksnamn"}
+            value={storeName}
             onChangeText={(text) => setStoreName(text)}
             />
 
             <DraggableFlatList
+            initialNumToRender={15}
             data={categories}
             renderItem={renderCategoryCard}
             keyExtractor={(item) => `draggable-item-${item.key}`}

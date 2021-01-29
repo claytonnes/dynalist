@@ -121,17 +121,38 @@ export default class Storage{
         }
     }
 
-    setStore(id, name, order){
-        let store = this.stores.find((store) => store.id == id);
+    async getStores(){
+        let stores;
+        try {
+            stores = await this.getData(this.storesKey);
+        } catch (e) {
+            console.log(e)
+        }
+        
+        if(stores == null || Object.entries(stores).length == 0){
+            return [];
+        } else return stores;
+    }
+
+    async setStore(id, name, order){
+        let stores;
+        try{
+            stores = await this.getStores();
+        }catch (e){
+            console.log(e);
+        }
+
+        const store = stores.find((store) => store.id == id);
+
         if(store==null){
-            this.stores.push({
+            stores.push({
                 id: id,
                 name: name,
                 order: order
             });
         }
         else{
-            this.stores[this.stores.indexOf(store)] = 
+            stores[stores.indexOf(store)] = 
             {
                 id: id,
                 name: name,
@@ -139,13 +160,42 @@ export default class Storage{
             };
         }
         
+        try {
+            this.storeData(this.storesKey, stores);   
+        }catch(e){
+            console.log(e);
+        }
     }
 
-    getStore(id){
-        return this.stores.find((store) => store.id == id);
+    async getStore(id){
+        let stores;
+        try {
+            stores = await this.getStores();
+        } catch(e) {
+            console.log(e);
+        }
+        return stores.find((store) => store.id == id);
     }
 
-    getStores(){
-        return this.stores;
+    async deleteStore(id){
+        let stores;
+        try {
+            stores = await this.getStores();
+        } catch(e) {
+            console.log(e);
+        }
+
+        let index = stores.indexOf(stores.find((store) => store.id == id));
+        if(index != -1){
+            stores.splice(index, 1);
+        }
+
+        try {
+            this.storeData(this.storesKey, stores);   
+        }catch(e){
+            console.log(e);
+        }
     }
+
+
 }
