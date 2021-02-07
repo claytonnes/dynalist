@@ -9,7 +9,7 @@ import DeleteButton from '../components/DeleteButton';
 const {height, width} = Dimensions.get('window');
 const storage = new Storage();
 
-const ListElement = ({ listName, store, date, onPress, deleteFunction }) =>
+const ListElement = ({ listName, store, onPress, deleteFunction }) =>
 {
     return(
         <Pressable 
@@ -20,7 +20,6 @@ const ListElement = ({ listName, store, date, onPress, deleteFunction }) =>
                 <Text style={styles.listNameText}>{listName}</Text>
                 <Text style={styles.listStoreText}>{store}</Text>
             </View>
-            <Text style={styles.listDateText}>{date}</Text>
             <DeleteButton deleteFunction={deleteFunction} size={30} color={"gray"}/>
         </Pressable>
 
@@ -40,7 +39,7 @@ export default function ListStartScreen( {navigation} ) {
     useEffect(() => {
         //Used for refreshing upon going back from ListScreen
         const unsubscribe = navigation.addListener('focus', () => {
-          fetchLists();
+          fetchLists();  
         });
         // Return the function to unsubscribe from the event so it gets removed on unmount
         return unsubscribe;
@@ -48,29 +47,32 @@ export default function ListStartScreen( {navigation} ) {
 
 
     //Function for rendering a list element for the flatlist
-    const renderListElement = ({ item }) =>
-    <ListElement
-    key={item.id} 
-    listName={item.name}
-    store={item.store}
-    date={item.date}
-    onPress={ () => {
-        navigation.navigate('ListScreen', {listId: item.id});
-    }}
-    deleteFunction={ async () => {
-        //finding correct list to delete
-        const listToDelete = lists.find((element) => element.id == item.id);
-        let copyOfLists = lists;
-        const index = copyOfLists.indexOf(listToDelete);
+    const renderListElement = ({ item }) =>{
+        return(
+        <ListElement
+            key={item.id} 
+            listName={item.name}
+            store={item.store}
+            onPress={ () => {
+                navigation.navigate('ListScreen', {listId: item.id});
+            }}
+            deleteFunction={ async () => {
+                //finding correct list to delete
+                const listToDelete = lists.find((element) => element.id == item.id);
+                let copyOfLists = lists;
+                const index = copyOfLists.indexOf(listToDelete);
+        
+                //Removing list from copy of state list
+                copyOfLists.splice(index, 1);
+        
+                //adding to storage and updating state
+                await storage.deleteList(listToDelete.id);
+                fetchLists();
+            }}
+            />
+        )
+    }
 
-        //Removing list from copy of state list
-        copyOfLists.splice(index, 1);
-
-        //adding to storage and updating state
-        await storage.deleteList(listToDelete.id);
-        fetchLists();
-    }}
-    />
 
     return (
         <View style={styles.container}>

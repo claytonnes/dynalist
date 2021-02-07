@@ -10,13 +10,10 @@ import DeleteButton from '../components/DeleteButton';
 const {height, width} = Dimensions.get('window');
 const storage = new Storage();
 
-const ListElement = ({ id, storeName, onPress, deleteFunction }) =>
+const ListElement = ({ storeName, onPress, deleteFunction }) =>
 {
     return(
-        <Pressable 
-        style={styles.elementContainer}
-        onPress={() => onPress()}
-        >
+        <Pressable style={styles.elementContainer} onPress={() => onPress()}>
             <View style={styles.leftElement}>
                 <Text style={styles.listNameText}>{storeName}</Text>
             </View>
@@ -27,9 +24,6 @@ const ListElement = ({ id, storeName, onPress, deleteFunction }) =>
     );
 };
 
-
-
-
 export default function StoreStartScreen( { navigation } )  {
     const [stores, setStores] = useState([]);
 
@@ -38,7 +32,7 @@ export default function StoreStartScreen( { navigation } )  {
     };
 
     useEffect(() => {
-        //Used for refreshing upon going back from ListScreen
+        //Used for refreshing upon navigation to this screen
         const unsubscribe = navigation.addListener('focus', () => {
           fetchStores();
         });
@@ -47,16 +41,16 @@ export default function StoreStartScreen( { navigation } )  {
       }, [navigation]);
 
     const renderStore = ({ item }) => (
-        <ListElement id={item.id} storeName={item.name} key={item.id}
+        <ListElement storeName={item.name} key={item.name}
         onPress={() => {
-            navigation.navigate('StoreScreen', {storeId: item.id});
+            navigation.navigate('StoreScreen', {storeName: item.name});
         }}
         deleteFunction={ async () => {
             let copy = stores;
-            const store = copy.find((store) => store.id == item.id);
+            const store = copy.find((store) => store.name == item.name);
             copy.splice(copy.indexOf(store),1);
 
-            await storage.deleteStore(item.id);
+            await storage.deleteStore(item.name);
             fetchStores();
         }}
         />
@@ -72,7 +66,7 @@ export default function StoreStartScreen( { navigation } )  {
             <FlatList
             data={stores}
             renderItem={renderStore}
-            keyExtractor={(item) => item.id}
+            keyExtractor={(item) => item.name}
             style={styles.flatList}
             />
         </View>

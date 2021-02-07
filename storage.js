@@ -1,4 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useDebugValue } from 'react';
+import productCategories from './productCategories';
 
 export default class Storage{
     constructor(){
@@ -39,7 +41,7 @@ export default class Storage{
 
     
     //Async function for adding or updating a list to the list storage of async-storage
-    async setList(id, listName, list){
+    async setList(id, listName, list, store){
         let l;
 
         try{
@@ -61,7 +63,7 @@ export default class Storage{
             l.push({id: id, name:listName, list: list});
         }
         else{
-            l[l.indexOf(specificList)] = {id: id, name:listName, list: list};
+            l[l.indexOf(specificList)] = {id: id, name:listName, list: list, store: store};
         }
 
         try{
@@ -83,6 +85,18 @@ export default class Storage{
             return item;
         } catch(e){
             console.log('Error retrieving list from storage');
+        }
+    }
+
+    //Async function for retrieving the name of a specific list.
+    //ANVÄNDS EJ. 
+    async getListName(id){
+        try{
+            const l = await this.getData(this.listsKey);
+            let list = l.find((item) => item.id == id);
+            return list.name;
+        }catch(e){
+            console.log(e);
         }
     }
 
@@ -130,11 +144,11 @@ export default class Storage{
         }
         
         if(stores == null || Object.entries(stores).length == 0){
-            return [];
+            return [productCategories()];
         } else return stores;
     }
 
-    async setStore(id, name, order){
+    async setStore(name, order){
         let stores;
         try{
             stores = await this.getStores();
@@ -142,11 +156,10 @@ export default class Storage{
             console.log(e);
         }
 
-        const store = stores.find((store) => store.id == id);
+        const store = stores.find((store) => store.name == name);
 
         if(store==null){
             stores.push({
-                id: id,
                 name: name,
                 order: order
             });
@@ -154,7 +167,6 @@ export default class Storage{
         else{
             stores[stores.indexOf(store)] = 
             {
-                id: id,
                 name: name,
                 order: order
             };
@@ -167,17 +179,40 @@ export default class Storage{
         }
     }
 
-    async getStore(id){
+    async getStore(name){
         let stores;
         try {
             stores = await this.getStores();
         } catch(e) {
             console.log(e);
         }
-        return stores.find((store) => store.id == id);
+        return stores.find((store) => store.name == name);
     }
 
-    async deleteStore(id){
+    async getDefaultStore(){
+        let stores;
+        try {
+            stores = await this.getStores();
+        } catch(e) {
+            console.log(e);
+        }
+        return await stores[0];
+    }
+
+    async getStoreNames(){
+        let stores;
+        try {
+            stores = await this.getStores();
+        } catch(e) {
+            console.log(e);
+        }
+        stores.map((store) =>{
+            return store.name;
+        })
+        return stores;
+    }
+
+    async deleteStore(name){
         let stores;
         try {
             stores = await this.getStores();
@@ -185,7 +220,7 @@ export default class Storage{
             console.log(e);
         }
 
-        let index = stores.indexOf(stores.find((store) => store.id == id));
+        let index = stores.indexOf(stores.find((store) => store.name == name));
         if(index != -1){
             stores.splice(index, 1);
         }

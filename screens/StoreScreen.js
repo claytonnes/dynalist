@@ -24,20 +24,20 @@ export default function StoreScreen({ navigation, route }) {
     const [storeName, setStoreName] = useState('');
 
     //Checking if parameters were sent
-    let storeId;
+    let name;
     if(route.params != null){
-        storeId = route.params.storeId;
+        name = route.params.storeName;
     }
 
     useEffect(() => {
         async function fetchStore(){
-            if(storeId != null){
-                let store = await storage.getStore(storeId)
+            if(name != null){
+                let store = await storage.getStore(name);
                 setCategories(await store.order);
                 setStoreName(await store.name);
             }
             else{
-                setCategories(productCategories);
+                setCategories(productCategories().order);
             }
         }
         fetchStore();
@@ -51,7 +51,7 @@ export default function StoreScreen({ navigation, route }) {
             style={styles.button}
             marginTop={height * 0.01}
             onPress={async () => {
-                await storage.setStore(uuidv4(), storeName, categories);
+                await storage.setStore(storeName==null ? uuidv4() : storeName, categories);
                 navigation.goBack();
             }}
             />

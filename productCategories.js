@@ -4,8 +4,8 @@ const c = [
         category: 'Frukt och grönt'
     },
     {
-        key: `item-${1}`,
-        category: 'Mejeri'
+        key: `item-${5}`,
+        category: 'Bröd'
     },
     {
         key: `item-${2}`,
@@ -20,55 +20,55 @@ const c = [
         category: 'Kött'
     },
     {
-        key: `item-${5}`,
-        category: 'Bröd'
-    },
-    {
         key: `item-${6}`,
         category: 'Färsk vego'
     },
     {
-        key: `item-${7}`,
-        category: 'Hygien'
+        key: `item-${16}`,
+        category: 'Färdigmat'
     },
     {
-        key: `item-${8}`,
-        category: 'Läsk'
-    },
-    {
-        key: `item-${9}`,
-        category: 'Godis'
-    },
-    {
-        key: `item-${10}`,
-        category: 'Chips'
-    },
-    {
-        key: `item-${11}`,
-        category: 'Bakning'
+        key: `item-${1}`,
+        category: 'Mejeri'
     },
     {
         key: `item-${12}`,
         category: 'Hyllprodukter'
     },
     {
-        key: `item-${13}`,
-        category: 'Städ'
+        key: `item-${11}`,
+        category: 'Bakning'
+    },
+    {
+        key: `item-${7}`,
+        category: 'Hygien'
     },
     {
         key: `item-${14}`,
         category: 'Djurprodukter'
     },
     {
+        key: `item-${13}`,
+        category: 'Städ'
+    },
+    {
         key: `item-${15}`,
         category: 'Frys'
     },
     {
-        key: `item-${16}`,
-        cateogry: 'Färdigmat'
-    }
+        key: `item-${8}`,
+        category: 'Läsk'
+    },
+    {
+        key: `item-${10}`,
+        category: 'Chips'
+    },
+    {
+        key: `item-${9}`,
+        category: 'Godis'
+    },
 ]
 
 export default function categories(){
-    return c;
+    return {id: 'default', name: 'default', order: c};
 }
