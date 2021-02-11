@@ -2,6 +2,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useDebugValue } from 'react';
 import productCategories from './productCategories';
 
+/*
+ Local storage for managing
+*/
 export default class Storage{
     constructor(){
         //Keys for the different storages I want from async-storage
@@ -60,7 +63,7 @@ export default class Storage{
 
         //If not create new list. If list exists, replace with new list object.
         if(!specificList){
-            l.push({id: id, name:listName, list: list});
+            l.push({id: id, name:listName, list: list, store: store});
         }
         else{
             l[l.indexOf(specificList)] = {id: id, name:listName, list: list, store: store};

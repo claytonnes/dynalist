@@ -1,9 +1,13 @@
 import 'react-native-gesture-handler';
 import React from 'react';
 import { StyleSheet, Text, View, StatusBar, SafeAreaView } from 'react-native';
-import HomeTabs from './routes/HomeTabs';
 import RootStack from './routes/RootStack';
 import Storage from './storage';
+import { LogBox } from 'react-native';
+
+LogBox.ignoreLogs([
+  'Non-serializable values were found in the navigation state',
+]);
 
 const storage = new Storage();
 
