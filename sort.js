@@ -8,7 +8,5 @@ export default function sort(order, listItems) {
             return listItem.product.cId === category.key;
         }));
     })
-
-    console.log(sortedArr);
     return sortedArr;
 }
