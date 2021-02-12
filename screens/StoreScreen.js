@@ -51,7 +51,7 @@ export default function StoreScreen({ navigation, route }) {
             style={styles.button}
             marginTop={height * 0.01}
             onPress={async () => {
-                await storage.setStore(storeName==null ? uuidv4() : storeName, categories);
+                await storage.setStore(storeName==null ? 'Namnlös Butikslayout' : storeName, categories);
                 navigation.goBack();
             }}
             />
@@ -67,7 +67,7 @@ export default function StoreScreen({ navigation, route }) {
             initialNumToRender={15}
             data={categories}
             renderItem={renderCategoryCard}
-            keyExtractor={(item) => `draggable-item-${item.key}`}
+            keyExtractor={(item) => item.key}
             onDragEnd={({ data }) => {setCategories(data);}}
             />
         

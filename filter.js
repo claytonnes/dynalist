@@ -1,3 +1,4 @@
+//Function for filtering the products based on text input
 function filter(input, products) {
     let filteredData = [];
     products.forEach((product) => {

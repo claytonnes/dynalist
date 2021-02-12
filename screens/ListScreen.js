@@ -1,6 +1,6 @@
 import React from 'react';
 import { useState, useRef, useEffect } from 'react';
-import { View, TextInput, StyleSheet, Dimensions, Text, TouchableOpacity, ImageBackground } from 'react-native';
+import { View, TextInput, StyleSheet, Dimensions, Text, TouchableOpacity, ImageBackground, Button } from 'react-native';
 import { FlatList } from 'react-native-gesture-handler';
 import 'react-native-get-random-values';
 import { v4 as uuidv4 } from 'uuid';
@@ -10,12 +10,15 @@ import DeleteButton from '../components/DeleteButton';
 import AutoComplete from 'react-native-autocomplete-input';
 import Products from '../GenerateProducts';
 import filter from '../filter';
+import sort from '../sort';
 
 const {height, width} = Dimensions.get('window');
 const storage = new Storage();
 
 const p = new Products();
-const data = p.generateVegetableProducts();
+const veg = p.generateVegetableProducts();
+const dairy = p.generateDairyProducts();
+const data = veg.concat(dairy);
 
 const ListElement = ({product, checked, deleteFunction}) => {  
     return(
@@ -24,7 +27,7 @@ const ListElement = ({product, checked, deleteFunction}) => {
         value={checked}
         />
         <View style={styles.listElementTextContainer}>
-            <Text>{product}</Text>
+            <Text>{product.name}</Text>
         </View>
         <DeleteButton deleteFunction={deleteFunction}
         size={20} color={"gray"} style={styles.deleteButton} />
@@ -47,6 +50,8 @@ export default function ListScreen({ route, navigation }) {
     const [store, setStore] = useState({});
     //Hook for managing suggestion box
     const [showSuggestions, setShowSuggestions] = useState(true);
+    //Hook for forced re-rendering
+    const [update, doUpdate] = useState(false);
 
     //Checking if parameters were sent
     let listId;
@@ -65,6 +70,7 @@ export default function ListScreen({ route, navigation }) {
             let copyOfList = list;
             copyOfList.list.splice(copyOfList.list.indexOf(le), 1);
             setList(copyOfList);
+            doUpdate(!update);
         }}
         />)
 
@@ -125,7 +131,7 @@ export default function ListScreen({ route, navigation }) {
         renderItem={({ item, i }) => (
             <TouchableOpacity onPress={() => {
                 let copy = list;
-                copy.list.push({id: uuidv4(), product: item.name, checked: false});
+                copy.list.push({id: uuidv4(), product: item, checked: false});
                 setList(copy);
                 setListElementInput('');
                 setShowSuggestions(true);
@@ -190,6 +196,16 @@ export default function ListScreen({ route, navigation }) {
                 }}>
                     <Text>Spara</Text>
                 </TouchableOpacity>
+                <Button 
+                title="Hello"
+                onPress={() => {
+                    let copy = list;
+                    copy.list = sort(store.order, list.list);
+                    setList(copy);
+                    doUpdate(!update);
+                }
+                }
+                />
             </View>
         </View>
     );
