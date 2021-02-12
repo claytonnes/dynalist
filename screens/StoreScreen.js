@@ -1,11 +1,10 @@
 import React from 'react';
 import { useEffect } from 'react';
 import { useState} from 'react';
-import { Pressable, View, StyleSheet, Dimensions, Text, TextInput, Button } from 'react-native';
+import { Pressable, View, StyleSheet, Dimensions, Text, TextInput, Button, ActivityIndicator } from 'react-native';
 import DraggableFlatList from "react-native-draggable-flatlist";
 import productCategories from '../productCategories';
 import Storage from '../storage';
-import { v4 as uuidv4 } from 'uuid';
 
 const storage = new Storage();
 
@@ -22,6 +21,7 @@ const renderCategoryCard = ( {item, index, drag} ) => {
 export default function StoreScreen({ navigation, route }) {
     const [categories, setCategories] = useState([]);
     const [storeName, setStoreName] = useState('');
+    const [loading, setLoading]  = useState(false);
 
     //Checking if parameters were sent
     let name;
@@ -29,7 +29,15 @@ export default function StoreScreen({ navigation, route }) {
         name = route.params.storeName;
     }
 
+    const startLoading = () => {
+        setLoading(true);
+        setTimeout(() => {
+      setLoading(false);
+    }, 200);
+    }
+
     useEffect(() => {
+        startLoading();
         async function fetchStore(){
             if(name != null){
                 let store = await storage.getStore(name);
@@ -45,32 +53,41 @@ export default function StoreScreen({ navigation, route }) {
     return (
         <View style={styles.container}>
 
-            <Button 
-            title="Spara"
-            color="#90E39A"
-            style={styles.button}
-            marginTop={height * 0.01}
-            onPress={async () => {
-                await storage.setStore(storeName==null ? 'Namnlös Butikslayout' : storeName, categories);
-                navigation.goBack();
-            }}
-            />
+            {loading ?
+            <ActivityIndicator
+             visible={loading}
+             color={"blue"}
+             size={"large"}
+            /> 
+            :
+            <>
+                <Button 
+                title="Spara"
+                color="#90E39A"
+                style={styles.button}
+                marginTop={height * 0.01}
+                onPress={async () => {
+                    await storage.setStore(storeName==null ? 'Namnlös Butikslayout' : storeName, categories);
+                    navigation.goBack();
+                }}
+                />
 
-            <TextInput
-            style={styles.textInput}
-            placeholder={"Butiksnamn"}
-            value={storeName}
-            onChangeText={(text) => setStoreName(text)}
-            />
+                <TextInput
+                style={styles.textInput}
+                placeholder={"Butiksnamn"}
+                value={storeName}
+                onChangeText={(text) => setStoreName(text)}
+                />
 
-            <DraggableFlatList
-            initialNumToRender={15}
-            data={categories}
-            renderItem={renderCategoryCard}
-            keyExtractor={(item) => item.key}
-            onDragEnd={({ data }) => {setCategories(data);}}
-            />
-        
+                <DraggableFlatList
+                initialNumToRender={15}
+                data={categories}
+                renderItem={renderCategoryCard}
+                keyExtractor={(item) => item.key}
+                onDragEnd={({ data }) => {setCategories(data);}}
+                />
+            </>
+        }
         </View>
     );
 }

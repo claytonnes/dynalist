@@ -6,6 +6,6 @@ function filter(input, products) {
             filteredData.push(product);
         }
     })
-    return filteredData;
+    return filteredData.slice(0,6);
 }
 export default filter;

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useState, useRef, useEffect } from 'react';
-import { View, TextInput, StyleSheet, Dimensions, Text, TouchableOpacity, ImageBackground, Button, RefreshControl } from 'react-native';
+import { View, TextInput, StyleSheet, Dimensions, Text, TouchableOpacity, Button} from 'react-native';
 import { FlatList } from 'react-native-gesture-handler';
 import 'react-native-get-random-values';
 import { v4 as uuidv4 } from 'uuid';
@@ -9,8 +9,8 @@ import Storage from '../storage';
 import DeleteButton from '../components/DeleteButton';
 import AutoComplete from 'react-native-autocomplete-input';
 import Products from '../GenerateProducts';
-import filter from '../filter';
-import sort from '../sort';
+import filter from '../functions/filter';
+import sort from '../functions/sort';
 
 const {height, width} = Dimensions.get('window');
 const storage = new Storage();
@@ -54,7 +54,7 @@ export default function ListScreen({ route, navigation }) {
     const [showSuggestions, setShowSuggestions] = useState(true);
     //Hook for forced re-rendering
     const [update, doUpdate] = useState(false);
-
+    
     //Checking if parameters were sent
     let listId;
     if(route.params != null){
@@ -122,7 +122,13 @@ export default function ListScreen({ route, navigation }) {
         <AutoComplete 
         onChangeText={(text) => {
             setListElementInput(text);
-            text.length > 0 ? setShowSuggestions(false) : setShowSuggestions(true);
+            if(text.length > 0){
+                setShowSuggestions(false);
+                setTimeout(() => flatList.current.scrollToEnd(), 200);
+            }
+            else{
+                setShowSuggestions(true);
+            }
         }}
         value={listElementInput}
         ref={textInput}
@@ -131,6 +137,7 @@ export default function ListScreen({ route, navigation }) {
         placeholderTextColor={"gray"}
         data={filter(listElementInput, data)}
         hideResults={showSuggestions}
+        numberOfLines={5}
         renderItem={({ item, i }) => (
             <TouchableOpacity onPress={() => {
                 let copy = list;
@@ -143,7 +150,9 @@ export default function ListScreen({ route, navigation }) {
             </TouchableOpacity>
         )
         }
-        onFocus={() => flatList.current.scrollToEnd()} 
+        onFocus={() => {
+            flatList.current.scrollToEnd()
+        }} 
         onSubmitEditing={ () => {
             if(listElementInput != ''){
                 let copy = list;
@@ -153,6 +162,7 @@ export default function ListScreen({ route, navigation }) {
                 setShowSuggestions(true);
             }}
         }
+        inputContainerStyle={{borderWidth: 0,borderBottomWidth: 1, borderBottomColor: "gray", margin: 5,}}
         />
     </View>
 
@@ -181,7 +191,7 @@ export default function ListScreen({ route, navigation }) {
 
             <FlatList
             ref={flatList}
-            style={styles.flatList} 
+            style={{flex: 1}} 
             data={list.list}
             renderItem={renderElement}
             keyExtractor={(item) => item.id}
@@ -244,9 +254,6 @@ const styles = StyleSheet.create({
     },
     deleteButton: {
         flex: 1
-    },
-    flatList:{
-        flex: 2
     },
     listElementInput: {
         height: 0.05*height,
