@@ -80,7 +80,7 @@ export default function ListStartScreen( {navigation} ) {
             onPress={ () => {
                 navigation.navigate('ListScreen')
             }}
-            text="Skapa ny lista"
+            text="Ny lista"
             />
             <Text style={styles.yourListsText}>Dina listor:</Text>
             <FlatList 

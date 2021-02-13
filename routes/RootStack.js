@@ -12,7 +12,7 @@ const Stack = createStackNavigator();
 export default function RootStack() {
   return (
     <NavigationContainer>
-        <Stack.Navigator headerMode='none'>
+        <Stack.Navigator headerMode={'none'}>
             <Stack.Screen name="Start" component={HomeTabs}/>
             <Stack.Screen name="StoreScreen" component={StoreScreen}/>
             <Stack.Screen name="ListScreen" component={ListScreen}/>

@@ -1,11 +1,12 @@
 import React from 'react';
 import { useState, useRef, useEffect } from 'react';
-import { View, TextInput, StyleSheet, Dimensions, Text, TouchableOpacity, Button} from 'react-native';
+import { View, TextInput, StyleSheet, Dimensions, Text, TouchableOpacity} from 'react-native';
 import { FlatList } from 'react-native-gesture-handler';
 import 'react-native-get-random-values';
 import { v4 as uuidv4 } from 'uuid';
 import CheckBox from '@react-native-community/checkbox';
 import Storage from '../storage';
+import Icon from 'react-native-vector-icons/AntDesign';
 import DeleteButton from '../components/DeleteButton';
 import AutoComplete from 'react-native-autocomplete-input';
 import Products from '../GenerateProducts';
@@ -22,11 +23,12 @@ const dairy = p.generateDairyProducts();
 const meat = p.generateMeatProducts();
 const data = veg.concat(dairy).concat(meat);
 
-const ListElement = ({product, checked, deleteFunction}) => {  
+const ListElement = ({id, product, checked, deleteFunction, list, setList}) => {  
     return(
     <View style={styles.listElementContainer}>
         <CheckBox 
         value={checked}
+        onValueChange={}
         />
         <View style={styles.listElementTextContainer}>
             <Text>{product.name}</Text>
@@ -66,6 +68,7 @@ export default function ListScreen({ route, navigation }) {
 
     const renderElement = ({ item }) => (
         <ListElement 
+        id={item.id}
         product={item.product}
         checked={item.checked}
         deleteFunction={async () => {
@@ -75,6 +78,8 @@ export default function ListScreen({ route, navigation }) {
             setList(copyOfList);
             doUpdate(!update);
         }}
+        list={list}
+        setList={setList}
         />)
 
     async function setData(){
@@ -137,14 +142,17 @@ export default function ListScreen({ route, navigation }) {
         placeholderTextColor={"gray"}
         data={filter(listElementInput, data)}
         hideResults={showSuggestions}
-        numberOfLines={5}
         renderItem={({ item, i }) => (
-            <TouchableOpacity onPress={() => {
+            <TouchableOpacity onPress={ async () => {
                 let copy = list;
                 copy.list.push({id: uuidv4(), product: item, checked: false});
                 setList(copy);
                 setListElementInput('');
                 setShowSuggestions(true);
+                //If listId was not sent as parameter, generate new Id from new list
+                //else assign current listId in order to update existing list
+                //store in storage
+                await storage.setList(listId == null ? uuidv4() : listId, listNameInput, list.list, store.name);
             }}>
               <Text>{item.name}</Text>
             </TouchableOpacity>
@@ -153,13 +161,14 @@ export default function ListScreen({ route, navigation }) {
         onFocus={() => {
             flatList.current.scrollToEnd()
         }} 
-        onSubmitEditing={ () => {
+        onSubmitEditing={ async () => {
             if(listElementInput != ''){
                 let copy = list;
                 copy.list.push({id: uuidv4(), product: listElementInput, checked: false});
                 setList(copy);
                 setListElementInput('');
                 setShowSuggestions(true);
+                await storage.setList(listId == null ? uuidv4() : listId, listNameInput, list.list, store.name);
             }}
         }
         inputContainerStyle={{borderWidth: 0,borderBottomWidth: 1, borderBottomColor: "gray", margin: 5,}}
@@ -170,20 +179,22 @@ export default function ListScreen({ route, navigation }) {
     return (
         <View style={styles.container}>
             <View style={styles.topContainer}>
-                <TextInput
-                style={styles.listNameInput}
-                placeholder={"Listnamn"}
-                placeholderTextColor={"gray"}
-                value={listNameInput}
-                onChangeText={(text) => setListNameInput(text)}
-                onFocus={() => setListNameInputFocus(true)}
-                onBlur={() => setListNameInputFocus(false)}
-                />
+                <View style={{flexDirection: "row", flex: 0.7, alignItems: "center"}}>
+                    <TouchableOpacity style={{marginLeft: 5}} onPress={() => {navigation.goBack();}}>
+                        <Icon name="arrowleft" size={25} color={"gray"}/>
+                    </TouchableOpacity>
+                    <TextInput
+                    style={styles.listNameInput}
+                    placeholder={"Listnamn"}
+                    placeholderTextColor={"gray"}
+                    value={listNameInput}
+                    onChangeText={(text) => setListNameInput(text)}
+                    onFocus={() => setListNameInputFocus(true)}
+                    onBlur={() => setListNameInputFocus(false)}/>
+                </View>
                 <TouchableOpacity 
                 style={styles.chooseStoreButton}
-                onPress={() => navigation.navigate('ChooseStoreScreen', {list: list.id, store: store.name, setStore: (store) =>  setStore(store)})}
-                
-                >
+                onPress={() => navigation.navigate('ChooseStoreScreen', {list: list.id, store: store.name, setStore: (store) =>  setStore(store)})}>
                     <Text style={styles.chooseStoreText}>Butikslayout</Text>
                     <Text style={styles.chosenStoreText}>{store==null ? '' : store.name}</Text>
                 </TouchableOpacity>
@@ -199,29 +210,19 @@ export default function ListScreen({ route, navigation }) {
             removeClippedSubviews={false}
             keyboardShouldPersistTaps="always"
             />
-     
+
             <View style={styles.buttonContainer}>
-                <TouchableOpacity
-                style={styles.saveButton}
-                onPress={ async () => {
-                    //If listId was not sent as parameter, generate new Id from new list
-                    //else assign current listId in order to update existing list
-                    //store in storage
-                    await storage.setList(listId == null ? uuidv4() : listId, listNameInput, list.list, store.name);
-                    navigation.goBack();
-                }}>
-                    <Text>Spara</Text>
+                <TouchableOpacity 
+                    style={styles.sortButton}
+                    onPress={() => {
+                        let copy = list;
+                        copy.list = sort(store.order, list.list);
+                        setList(copy);
+                        doUpdate(!update);}
+                    }
+                >
+                        <Text style={styles.sortButtonText}>Sortera</Text>
                 </TouchableOpacity>
-                <Button 
-                title="Hello"
-                onPress={() => {
-                    let copy = list;
-                    copy.list = sort(store.order, list.list);
-                    setList(copy);
-                    doUpdate(!update);
-                }
-                }
-                />
             </View>
         </View>
     );
@@ -229,7 +230,7 @@ export default function ListScreen({ route, navigation }) {
 
 const styles = StyleSheet.create({
     buttonContainer: {
-        height: height * 0.08,
+        flex: 0.08,
         alignItems: "center",
         paddingBottom: height * 0.04,
         marginTop: height * 0.03
@@ -268,21 +269,23 @@ const styles = StyleSheet.create({
         flex: 12
     },
     listNameInput: {
-        flex: 0.7,
         height: 0.07*height,
         fontWeight: "bold",
         fontSize: 25,
         marginLeft: width * 0.01,
         marginRight: width * 0.01,
     },
-    saveButton:{
+    sortButton:{
         position: "absolute",
         height: height * 0.05,
         width: width * 0.4,
         borderWidth: 0.5,
-        borderRadius: 8,
+        borderRadius: 14,
         justifyContent: "center",
         alignItems: "center",
+    },
+    sortButtonText:{
+
     },
     suggestionContainer: {
         marginLeft: width * 0.01,
