@@ -1,6 +1,7 @@
 import 'react-native-get-random-values';
 import { v4 as uuidv4 } from 'uuid';
 
+//CLASS FOR TEST DATA
 export default class GenerateProducts{
     constructor(){
         this.dairy ='Mjölk,Fil,Yoghurt,Kvarg,Keso,Smör,Grädde,Crème fraiche,Gräddfil,Kvarg,Smetana,Matlagninggrädde,Kefir';

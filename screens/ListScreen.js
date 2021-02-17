@@ -28,7 +28,15 @@ const ListElement = ({id, product, checked, deleteFunction, list, setList}) => {
     <View style={styles.listElementContainer}>
         <CheckBox 
         value={checked}
-        onValueChange={}
+        onValueChange={(newValue) => {
+            let copy = list.list;
+            console.log(copy);
+            let element = copy.find((element) => {
+                element.id == id;
+            });
+            copy[copy.indexOf(element)].checked = newValue;
+            setList(copy);
+        }}
         />
         <View style={styles.listElementTextContainer}>
             <Text>{product.name}</Text>
